@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html >
+    <head>
+        <meta charset="UTF-8" />
+        <title>A Fazer</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="jquery.mobile-1.4.5.min.css" />
+        <link rel="stylesheet" href="estilo.css" />
+        <script src="jquery-2.1.4.min.js"></script>
+        <script src="jquery.mobile-1.4.5.min.js"></script>
+        <script src="angularjs.min.js"></script>
+        <script type="text/javascript">
+        $.mobile.linkBindingEnabled = false;
+        $.mobile.hashListeningEnabled = false;
+        var myApp = angular.module('myApp', []);
+        myApp.controller('mainController',['$scope','$window', function($scope, $window) {
+            function init() {
+                $scope.link = false;
+                $scope.markDelete = null;
+                $scope.tarefas = JSON.parse($window.localStorage.getItem('tarefas'));
+                $scope.tarefasFeitas = JSON.parse($window.localStorage.getItem('tarefas-feitas'));
+                if (!$scope.tarefas) {
+                    $scope.tarefas = [];
+                }
+                if (!$scope.tarefasFeitas) {
+                    $scope.tarefasFeitas = [];
+                }
+            }
+
+            $scope.adicionarTarefa = function (descricao) {
+                if (!descricao) {
+                    return;
+                }
+
+                $scope.tarefas.push({descricao:descricao});
+                $window.localStorage.setItem('tarefas', JSON.stringify($scope.tarefas));
+                $scope.descricao = null;
+                $('ul.ngRepeat').listview('refresh');
+            }
+
+            function confirmaFeito (index) {
+                $scope.tarefasFeitas.push($scope.tarefas[index]);
+                $scope.tarefas.splice(index,1);
+                $window.localStorage.setItem('tarefas', JSON.stringify($scope.tarefas));
+                $window.localStorage.setItem('tarefas-feitas', JSON.stringify($scope.tarefasFeitas));
+                $('ul.ngRepeat').listview('refresh');
+            }
+
+            function confirmaDelete() {
+                if ($scope.markDelete === null) {
+                    return;
+                }
+
+                $scope.tarefas.splice($scope.markDelete, 1);
+                $window.localStorage.setItem('tarefas', JSON.stringify($scope.tarefas));
+                $('ul.ngRepeat').listview('refresh');
+            }
+
+            $scope.openDelete = function (index) {
+                $scope.markDelete = index;
+                $scope.toggleLink();
+            }
+
+            $scope.openFeito = function (index) {
+                $scope.markFeito = index;
+                $scope.toggleLink();
+            }
+
+            $scope.toggleLink = function (index) {
+                $.mobile.linkBindingEnabled = !$scope.link;
+                $.mobile.hashListeningEnabled = !$scope.link;
+            }
+
+            $scope.deletarEToggleLink = function () {
+                confirmaDelete();
+                $scope.toggleLink();
+            }
+
+            $scope.feitoEToggleLink = function () {
+                confirmaFeito($scope.markFeito);
+                $scope.toggleLink();
+            }
+
+            init();
+        }]);
+        myApp.directive('jqm', function($timeout) {
+          return {
+            link: function(scope, elm, attr) {
+                $timeout(function(){
+                    elm.trigger('create');
+                });
+            }
+          };
+        });
+        </script>
+    </head>
+    <body ng-app="myApp">
+        <div data-role="page" ng-controller="mainController">
+            <div data-role="header">
+                <h1>A Fazer</h1>
+            </div>
+            <div data-role="content" jqm>
+                <form name="aFazerForm">
+                    <fieldset data-role="collapsible">
+                        <legend>A Fazer</legend>
+                        <label for="tarefa">Tarefa:</label>
+                        <input type="text" name="tarefa" id="tarefa" placeholder="Lavar Roupa" ng-model="descricao" value="">
+                        <button class="ui-btn ui-btn-inline" type="button" ng-click="adicionarTarefa(descricao)">Adicionar Tarefa</button>
+                        <div data-role="controlgroup">
+                            <ul data-role="listview" class="ngRepeat" data-split-icon="delete" data-split-theme="b" data-inset="true">
+                                <li ng-repeat="tarefa in tarefas">
+                                    <a href="#confirmaFeito" data-rel="popup" data-position-to="window" data-transition="pop" ng-click="openFeito($index)">
+                                        <h2>{{tarefa.descricao}}</h2>
+                                    </a>
+                                    <a href="#confirmaDelete" data-rel="popup" data-position-to="window" data-transition="pop" ng-click="openDelete($index)">Delete</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </fieldset>
+                    <fieldset data-role="collapsible">
+                        <legend>Feito</legend>
+                        <div data-role="controlgroup">
+                            <ul data-role="listview" class="ngRepeat" data-inset="true">
+                                <li ng-repeat="tarefa in tarefasFeitas" data-icon="check">
+                                    <a>
+                                        <h2>{{tarefa.descricao}}</h2>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+            <div data-role="popup" id="confirmaDelete" data-overlay-theme="b" data-theme="b" data-dismissible="false" style="max-width:400px;">
+                <div data-role="header" data-theme="a">
+                    <h1>Deletar?</h1>
+                </div>
+                <div role="main" class="ui-content">
+                    <h3 class="ui-title">Tem Certeza que deseja deletar Tarefa</p>
+                    <a href="#" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-btn-b" data-rel="back" ng-click="toggleLink()">Cancelar</a>
+                    <a href="#" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-btn-r" data-rel="back" data-transition="flow" ng-click="deletarEToggleLink()">Deletar</a>
+                </div>
+            </div>
+            <div data-role="popup" id="confirmaFeito" data-overlay-theme="b" data-theme="b" data-dismissible="false" style="max-width:400px;">
+                <div data-role="header" data-theme="a">
+                    <h1>Feito?</h1>
+                </div>
+                <div role="main" class="ui-content">
+                    <h3 class="ui-title">Tem Certeza que deseja marcar Tarefa como feito</p>
+                    <a href="#" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-btn-b" data-rel="back" ng-click="toggleLink()">Cancel</a>
+                    <a href="#" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-btn-r" data-rel="back" data-transition="flow" ng-click="feitoEToggleLink()">Feito!</a>
+                </div>
+            </div>
+            <div data-role="footer">
+                <h4>Organize suas tarefas todas aqui!</h4>
+            </div>
+        </div>
+    </body>
+</html>

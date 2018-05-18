@@ -1,0 +1,13 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<widget xmlns     = "http://www.w3.org/ns/widgets"
+        xmlns:gap = "http://phonegap.com/ns/1.0"
+		id        = "com.marcos.porto"
+		version   = "1.0">
+
+<name>Minhas Tarefas</name>
+<description>App para organizar tarefas</description>
+<author email ="marcosbporto@gmail.com" > Marcos Porto 
+</author>
+<icon src="logo_114x114.png" heigth="114" width="114"/>
+<icon src="logo_72x72.png" heigth="72" width="72"/>
+</widget>
